@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split.io Track + S3 Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+        .event-log {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Split.io Track + S3 Example</h1>
+        <p>This example demonstrates tracking events to both Split.io and an S3 bucket via a batching server.</p>
+
+        <button id="trackButton">Send Track Event</button>
+
+        <div class="status" id="status">
+            Ready to track events
+        </div>
+
+        <div class="event-log" id="eventLog">
+            <strong>Event Log:</strong>
+        </div>
+    </div>
+
+    <!-- Split.io SDK -->
+    <script src="https://cdn.split.io/sdk/split-11.7.1.min.js"></script>
+
+    <!-- Track Module -->
+    <script type="module">
+        import { initTracker, track } from './track.js';
+
+        // Initialize Split SDK
+        const factory = window.splitio({
+            core: {
+                authorizationKey: '<%= splitApiKey %>', // From .env file
+                key: 'user-' + Math.random().toString(36).substring(7) // Random user ID for demo
+            }
+        });
+
+        const client = factory.client();
+
+        // Wait for SDK to be ready (technically you don't have to do this when just tracking events but it's a good practice because other SDK methods rely on it)
+        client.on(client.Event.SDK_READY, function() {
+            initTracker(client);
+            updateStatus('Split SDK Ready');
+        });
+
+        client.on(client.Event.SDK_READY_TIMED_OUT, function() {
+            initTracker(client);
+            updateStatus('Split SDK Timed Out - continuing anyway', 'warning');
+        });
+
+        // Button click handler
+        let eventCounter = 0;
+        document.getElementById('trackButton').addEventListener('click', async function() {
+            eventCounter++;
+
+            const eventName = 'button_click';
+            const eventValue = eventCounter;
+            const properties = {
+                timestamp: new Date().toISOString(),
+                counter: eventCounter,
+                userAgent: navigator.userAgent,
+                page: window.location.pathname
+            };
+
+            try {
+                // Call our wrapper function that tracks to both Split and S3
+                let success = await track('user', eventName, eventValue, properties);
+                console.log('Track result:', success);
+                if (success) {
+                    updateStatus(`Event #${eventCounter} tracked successfully!`, 'success');
+                    logEvent(eventName, eventValue, properties);
+                } else {
+                    updateStatus(`Event #${eventCounter} NOT tracked successfully!`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, 'error');
+                console.error('Tracking error:', error);
+            }
+        });
+
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+
+            // Update styling based on type
+            statusEl.style.borderLeftColor =
+                type === 'success' ? '#4CAF50' :
+                type === 'error' ? '#f44336' :
+                type === 'warning' ? '#ff9800' :
+                '#2196F3';
+        }
+
+        function logEvent(name, value, properties) {
+            const logEl = document.getElementById('eventLog');
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            eventItem.textContent = `${new Date().toLocaleTimeString()} - ${name} (value: ${value})`;
+            logEl.appendChild(eventItem);
+
+            // Auto-scroll to bottom
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+    </script>
+</body>
+</html>

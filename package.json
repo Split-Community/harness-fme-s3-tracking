@@ -1,0 +1,37 @@
+{
+  "name": "harness-fme-s3-tracking-example",
+  "version": "1.0.0",
+  "description": "Example demonstrating Harness FME (Split SDK) event tracking with AWS S3 batching",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Split-Community/harness-fme-s3-tracking.git"
+  },
+  "keywords": [
+    "harness",
+    "harness-fme",
+    "split.io",
+    "feature-flags",
+    "analytics",
+    "aws-s3",
+    "event-tracking",
+    "batching",
+    "ndjson"
+  ],
+  "author": "Harness Community",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.645.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
