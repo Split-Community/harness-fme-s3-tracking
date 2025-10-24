@@ -455,7 +455,6 @@ This example is useful for:
 - **Custom Analytics**: Process events with AWS Athena, EMR, or Glue
 - **Data Warehousing**: Load events into Redshift or Snowflake
 - **Backup**: Maintain a backup of all events outside Harness FME
-- **Cost Optimization**: Analyze events in S3 instead of making expensive API calls
 
 ## Learn More
 
